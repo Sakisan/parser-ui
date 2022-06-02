@@ -40,7 +40,7 @@ viewHeader =
         , Element.spacing 16
         , Element.padding 8
         ]
-        [ Element.el [ Element.padding 15 ] (Element.text "ParserUI explained")
+        [ Element.el [ Element.padding 15 ] (Element.text "ParserUI: helper functions for visualizating errors from elm/parser")
         ]
 
 
@@ -65,10 +65,10 @@ body =
         ]
     <|
         List.map (\el -> Element.el [ Element.width Element.fill ] el)
-            [ text "What debugging a parser looks like now:"
-            , let
-                code =
-                    """
+            [ plainText "What debugging a parser looks like now."
+            , plainText "Say we have this relatively simple parser:"
+            , codeBlock
+                """
 intParser : Parser Int
 intParser =
     Parser.oneOf
@@ -77,8 +77,11 @@ intParser =
             |= Parser.int
         , Parser.int
         ]
-
-
+"""
+            , plainText "and we test it out on a few values like so:"
+            , let
+                code =
+                    """
 main : Html msg
 main =
     let
@@ -97,27 +100,35 @@ main =
 """
               in
               codePreview code (Element.html Wip.Main1.main)
-            , text "Ah yes, the notoriously missing deadEndsToString."
-            , text "A straight forward implementation at least gives us this:"
+            , plainText "Ah yes, the notoriously missing deadEndsToString."
+            , plainText "A basic implementation, that you're probably already using, would at least give us this:"
             , codePreview """ParserUI.deadEndsToString e"""
                 (Element.html Wip.Main2.main)
-            , text "Still this is not very practical when dealing with bigger inputs and bigger parsers. So let's bring them in and see what we can do with them."
-            , spaceUp <| text "This example input is from advent of code 2020 day 7"
+            , plainText "Still this is not very practical when dealing with bigger inputs and bigger parsers. So let's bring them in and see what we can do with them."
+            , spaceUp <|
+                Element.paragraph []
+                    [ Element.el [] (Element.text "This example input text is from ")
+                    , Element.newTabLink [ Font.underline ]
+                        { url = "https://adventofcode.com/2020/day/7"
+                        , label = Element.text "advent of code 2020 day 7"
+                        }
+                    , Element.el [] (Element.text ".")
+                    ]
             , inputView Wip.Main3.input
-            , text "We want to parse this into a fairly unsophisticated list of bags."
+            , plainText "We want to parse this into this model of Elm types:"
             , codeBlock """
-type alias Color =               -- "light red bags"
+type alias Color =               -- "light red"
     String
 
 type alias Contents =            -- "1 bright white bag, 2 muted yellow bags."
-    List ( Int, Color )
+    List ( Int, Color )          -- becomes [(1, "bright white"), (2, "muted yellow")]
 
-type alias BagCollection =       -- This should have each line of the input parsed
-    List ( Color, Contents )
+type alias BagCollection =       -- This should have the whole input text parsed
+    List ( Color, Contents )     
 """
-            , text "A succesful parser would give us this:"
+            , plainText "A succesful parser would give us this:"
             , showPreview Wip.Main3.main_2
-            , text "This parser fails however"
+            , plainText "Here is a implementation for the parser, with one mistake in it somewhere."
             , let
                 code =
                     """
@@ -174,9 +185,10 @@ nBagsParser =
                 """
               in
               codePreview code (Element.html Wip.Main3.main)
-            , spaceUp <| text "Let's try again with a little more visualization."
+            , plainText "This error still leaves at lot of work to the reader to figure out where it went wrong and why."
+            , spaceUp <| plainText "Let's try again with a little more visualization."
             , showPreview (Element.html Wip.Main3.main_1b)
-            , text "This error was rendered using ParserUI.splitDeadEnds"
+            , plainText "This error was rendered by this following snippet. Using ParserUI.splitDeadEnds to process the error data and viewSplit for the HTML."
             , codeBlock """
 main : Html msg
 main =
@@ -195,7 +207,7 @@ viewSplit split =
         , Html.p [] [ Html.text ("Expected: " ++ split.before), Html.u [] [ Html.text split.expected ] ]
         , Html.p [] [ Html.text ("But got:  " ++ split.before ++ split.after) ]
         ] """
-            , spaceUp <| text "Another way to render the same error with elm-ui"
+            , spaceUp <| plainText "Another way to render the same error with elm-ui"
             , showPreview Wip.Main3.main_1c
             , codeBlock """
 main : Element msg
@@ -230,7 +242,7 @@ viewSplit split =
             |> Element.text
             |> Element.el [ Font.color (Element.rgb255 128 128 128) ]
         ] """
-            , spaceUp <| text "By the way the fix for the parser is as follows"
+            , spaceUp <| plainText "By the way the fix for the parser above is as follows"
             , codeBlock
                 """
     -- replace this line
@@ -238,10 +250,11 @@ viewSplit split =
 
     -- by this line
     |. Parser.oneOf [ Parser.token "bags", Parser.token "bag" ]"""
+            , spaceUp <| plainText "The complete functional code for these examples are availabe in the source files for this demo page."
             ]
 
 
-text str =
+plainText str =
     Element.paragraph [] [ Element.el [] (Element.text str) ]
 
 
